@@ -2,9 +2,6 @@ from openai import OpenAI
 from .pdf2list import pdf2list
 
 
-  # class NumberOrNone(BaseModel):
-  #   page: Optional[int]
-
 def prompt_template(client, model, role, prompt, seed = None, image = None, response_format = None):
   """
   A template for calling the ChatGPT API that can be called directly.
@@ -26,7 +23,18 @@ def prompt_template(client, model, role, prompt, seed = None, image = None, resp
   """
   system_role = {"role": "system", "content": role}
   
-  # Get image json set up.
+  # Set up text prompt.
+  prompt_json = {
+    "role": "user", 
+    "content": [
+      {
+        "type": "text", 
+        "text": prompt
+      }
+    ]
+  }
+
+  # Add image json
   if image is not None:
     image_json = {
       "type": "image_url", 
@@ -34,30 +42,16 @@ def prompt_template(client, model, role, prompt, seed = None, image = None, resp
         "url": f"data:image/jpeg;base64,{image}"
       }
     }
-  else:
-    image_json = None
-
-  # Combine image with text prompt.
-  prompt_json = {
-    "role": "user", 
-    "content": [
-      {
-        "type": "text", 
-        "text": prompt
-      },
-      {
-        image_json
-      }
-    ]
-  }
+    doc_json['content'].append(image_json)
 
   messages = [
     system_role, 
     prompt_json
   ]
-  respons = client.beta.chat.completions.parse(
+  response = client.beta.chat.completions.parse(
     model = model, 
     messages = messages,
     seed = seed,
-    response_format = json_schema # This line should not be here if no response_format.
+    response_format = response_format # This line should not be here if no response_format.
   )
+  return response
