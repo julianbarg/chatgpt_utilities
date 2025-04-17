@@ -38,20 +38,29 @@ def prompt_template(client, model, role, prompt, seed = None, image = None, resp
   if image is not None:
     image_json = {
       "type": "image_url", 
-      "imague_url": {
+      "image_url": {
         "url": f"data:image/jpeg;base64,{image}"
       }
     }
-    doc_json['content'].append(image_json)
+    prompt_json['content'].append(image_json)
 
   messages = [
     system_role, 
     prompt_json
   ]
-  response = client.beta.chat.completions.parse(
-    model = model, 
-    messages = messages,
-    seed = seed,
-    response_format = response_format # This line should not be here if no response_format.
-  )
+
+  if response_format is not None:
+    response = client.beta.chat.completions.parse(
+      model = model, 
+      messages = messages,
+      seed = seed,
+      response_format = "json_schema", 
+      tools = [response_format]
+    )
+  else:
+    response = client.beta.chat.completions.parse(
+      model = model, 
+      messages = messages,
+      seed = seed
+    )
   return response
